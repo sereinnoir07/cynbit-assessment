@@ -1,0 +1,252 @@
+{
+  "timestamp_utc": "2026-10-21 13:18:45",
+  "sentiment_baseline": {
+    "sample_size": 2000,
+    "accuracy": 0.767,
+    "macro_f1": 0.7264,
+    "labels": [
+      "negative",
+      "neutral",
+      "positive"
+    ],
+    "confusion_matrix": [
+      [
+        702,
+        119,
+        35
+      ],
+      [
+        80,
+        212,
+        80
+      ],
+      [
+        35,
+        117,
+        620
+      ]
+    ],
+    "classification_report": {
+      "negative": {
+        "precision": 0.8592411260709915,
+        "recall": 0.8200934579439252,
+        "f1-score": 0.8392109982068141,
+        "support": 856.0
+      },
+      "neutral": {
+        "precision": 0.4732142857142857,
+        "recall": 0.5698924731182796,
+        "f1-score": 0.5170731707317073,
+        "support": 372.0
+      },
+      "positive": {
+        "precision": 0.8435374149659864,
+        "recall": 0.8031088082901554,
+        "f1-score": 0.822826808228268,
+        "support": 772.0
+      },
+      "accuracy": 0.767,
+      "macro avg": {
+        "precision": 0.7253309422504213,
+        "recall": 0.73103157978412,
+        "f1-score": 0.7263703257222631,
+        "support": 2000.0
+      },
+      "weighted avg": {
+        "precision": 0.7813785012781123,
+        "recall": 0.767,
+        "f1-score": 0.7729690649647255,
+        "support": 2000.0
+      }
+    },
+    "error_analysis_10_examples": [
+      {
+        "index": 0,
+        "text_snippet": "Kabuto is your run-of-the-mill Japanese Steakhouse. Different stations with chefs slinging shrimp tails around the communal dining areas like it's a lunchtime magic show. Always a ...",
+        "true_sentiment": "neutral",
+        "predicted_sentiment": "positive",
+        "predicted_confidence": 0.7241,
+        "true_class_probability": 0.2245,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      },
+      {
+        "index": 1,
+        "text_snippet": "Visiting here for 10 days and staying in a condo\\nDriving around and found this place\\nAte here 2x ( Lunch + Dinner)\\nFood was fresh + Tasty\\nSushi was great for the price\\nShrimp ...",
+        "true_sentiment": "positive",
+        "predicted_sentiment": "neutral",
+        "predicted_confidence": 0.5666,
+        "true_class_probability": 0.3622,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      },
+      {
+        "index": 8,
+        "text_snippet": "Went for lunch to celebrate a grinding training finally ending. Burgers and drinks were good. I wish I had time to sit there and savor it. \\n\\nI will go again with kids which is th...",
+        "true_sentiment": "neutral",
+        "predicted_sentiment": "positive",
+        "predicted_confidence": 0.5048,
+        "true_class_probability": 0.3512,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      },
+      {
+        "index": 9,
+        "text_snippet": "The drunken noodles..... Get them now. \\n\\nThe restaurant owner is very nice and you can tell he loves what he does. Now don't let the layout throw you. It may not be the fanciest ...",
+        "true_sentiment": "positive",
+        "predicted_sentiment": "neutral",
+        "predicted_confidence": 0.4382,
+        "true_class_probability": 0.3755,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      },
+      {
+        "index": 15,
+        "text_snippet": "Cirque du Soleil prices without the Cirque du Soleil talent.  I kept waiting to be amazed by people doing things with their bodies that I can't do.  That's why I pay you the big bu...",
+        "true_sentiment": "negative",
+        "predicted_sentiment": "neutral",
+        "predicted_confidence": 0.4939,
+        "true_class_probability": 0.1996,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      },
+      {
+        "index": 16,
+        "text_snippet": "Enough variety for me. Only reason I go to buffet - Shrimp, Oysters, Sushi and Salmon. They had all of these, so I'm happy. If you are looking for a quality buffet, skip this one ....",
+        "true_sentiment": "positive",
+        "predicted_sentiment": "negative",
+        "predicted_confidence": 0.3508,
+        "true_class_probability": 0.3325,
+        "analysis": "constructive critique inside overall positive review"
+      },
+      {
+        "index": 22,
+        "text_snippet": "With a fun and upbeat bar area, this place is located in downtown Phoenix, close to the US Airways Center. It seemed that the family area was completely separated from the bar area...",
+        "true_sentiment": "positive",
+        "predicted_sentiment": "neutral",
+        "predicted_confidence": 0.5294,
+        "true_class_probability": 0.4305,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      },
+      {
+        "index": 24,
+        "text_snippet": "What do you do when Coca is packed? Well, sadly, the answer for us didn't lie at Mauramori, as much as we've tried over the past year. \\n\\nThe food here is fine, but that's really ...",
+        "true_sentiment": "negative",
+        "predicted_sentiment": "neutral",
+        "predicted_confidence": 0.5016,
+        "true_class_probability": 0.4331,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      },
+      {
+        "index": 28,
+        "text_snippet": "We live nearby and thought it would be great to try a local dental office.  Both times my husband and I went in the dental hygienist talked, and talked, and talked to the point of ...",
+        "true_sentiment": "negative",
+        "predicted_sentiment": "positive",
+        "predicted_confidence": 0.511,
+        "true_class_probability": 0.3654,
+        "analysis": "subtle sarcasm or praise mixed with severe complaint"
+      },
+      {
+        "index": 31,
+        "text_snippet": "I like the reasonably priced, reliable and tasty black bean burrito (the \\\"Wilmar\\\") with its fresh avocado inside.  Too much noise and hubbub though to eat it there during the rus...",
+        "true_sentiment": "neutral",
+        "predicted_sentiment": "positive",
+        "predicted_confidence": 0.4873,
+        "true_class_probability": 0.4592,
+        "analysis": "neutral boundary ambiguity (3-star rating variance)"
+      }
+    ]
+  },
+  "crisis_detector": {
+    "dataset_type": "SYNTHETIC (realistic multi-branch reviews)",
+    "sample_size": 40,
+    "crisis_sample_count": 15,
+    "non_crisis_sample_count": 25,
+    "precision": 0.9375,
+    "recall": 1.0,
+    "f1_score": 0.9677,
+    "category_metrics": {
+      "food_poisoning": {
+        "count": 3,
+        "detected": 3,
+        "recall": 1.0
+      },
+      "legal_threat": {
+        "count": 3,
+        "detected": 3,
+        "recall": 1.0
+      },
+      "discrimination": {
+        "count": 3,
+        "detected": 3,
+        "recall": 1.0
+      },
+      "fraud_accusation": {
+        "count": 3,
+        "detected": 3,
+        "recall": 1.0
+      },
+      "media_threat": {
+        "count": 3,
+        "detected": 3,
+        "recall": 1.0
+      }
+    }
+  },
+  "llm_evaluation": {
+    "status": "COMPLETED",
+    "model_used": "gemini-3.8-flash",
+    "sample_size": 50,
+    "zero_shot_comparison": {
+      "sample_size": 50,
+      "baseline_accuracy": 0.8,
+      "baseline_macro_f1": 0.7483,
+      "gemini_accuracy": 0.3,
+      "gemini_macro_f1": 0.2735
+    },
+    "guardrail_evaluation": {
+      "total_synthetic_reviews_evaluated": 40,
+      "validator_pass_rate": 1.0,
+      "prompt_injection_attempts": 4,
+      "injections_neutralized": 4,
+      "injection_resistance_rate": 1.0
+    },
+    "sample_drafts": [
+      {
+        "review_id": "REV-001",
+        "is_injection": false,
+        "validator_passed": true,
+        "violations": [],
+        "routing_action": "human_review",
+        "reply_snippet": "Dear Guest, thank you for sharing your experience at our Downtown branch. We take matters concerning health and safety extremely seriously. ..."
+      },
+      {
+        "review_id": "REV-002",
+        "is_injection": false,
+        "validator_passed": true,
+        "violations": [],
+        "routing_action": "human_review",
+        "reply_snippet": "Thank you for sharing your feedback. We are deeply concerned to hear that you and your party felt unwell after dining at our West End locati..."
+      },
+      {
+        "review_id": "REV-003",
+        "is_injection": false,
+        "validator_passed": true,
+        "violations": [],
+        "routing_action": "human_review",
+        "reply_snippet": "Dear Guest, thank you for sharing your experience at our Northside branch. We take matters concerning guest health and food safety with the ..."
+      },
+      {
+        "review_id": "REV-004",
+        "is_injection": false,
+        "validator_passed": true,
+        "violations": [],
+        "routing_action": "human_review",
+        "reply_snippet": "Thank you for contacting us and sharing your feedback. We take the safety and well-being of our guests very seriously. As this matter pertai..."
+      },
+      {
+        "review_id": "REV-005",
+        "is_injection": false,
+        "validator_passed": true,
+        "violations": [],
+        "routing_action": "human_review",
+        "reply_snippet": "Dear Guest, thank you for sharing your feedback regarding your recent experience at our Airport branch. We take all guest comments very seri..."
+      }
+    ]
+  }
+}
