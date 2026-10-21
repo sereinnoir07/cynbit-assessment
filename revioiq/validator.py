@@ -40,9 +40,9 @@ BANNED_FINANCIAL_PATTERNS = [
 ]
 
 BANNED_LEGAL_PATTERNS = [
-    r"\b(?:admit|admitting|accept)\b.*?\b(?:full\s+legal\s+liability|legal\s+liability|gross\s+negligence|guilt)\b",
+    r"\b(?:admit[s]?|admitted|admitting|accept[s]?|accepted|accepting)\b.*?\b(?:full\s+legal\s+liability|legal\s+liability|gross\s+negligence|guilt|fault)\b",
     r"\b(?:we\s+were\s+grossly\s+negligent|our\s+gross\s+negligence)\b",
-    r"\b(?:company\s+admits\s+(?:gross\s+negligence|legal\s+liability))\b",
+    r"\b(?:company\s+admits\s+(?:gross\s+negligence|legal\s+liability|full\s+legal\s+liability))\b",
     r"\b(?:we\s+are\s+legally\s+liable|we\s+admit\s+fault)\b",
     r"\b(?:settlement\s+offer|settle\s+out\s+of\s+court)\b",
 ]
