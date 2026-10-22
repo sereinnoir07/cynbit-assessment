@@ -17,9 +17,10 @@ Outputs:
 import json
 import logging
 import os
+import re
 import sys
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
@@ -159,6 +160,85 @@ def evaluate_crisis_detector(df_synth: pd.DataFrame) -> Dict:
     }
 
 
+def parse_sentiment_label(raw_text: str) -> str:
+    """Robustly parse sentiment category from raw LLM output.
+
+    Prevents naive substring collisions and ensures strictly validated categories.
+    """
+    if not raw_text:
+        return "neutral"
+    clean = raw_text.strip().lower()
+
+    # Match standalone tokens using word boundaries
+    words = re.findall(r"\b(positive|negative|neutral)\b", clean)
+    if words:
+        return words[0]
+
+    # Fallback substring checks with mutual exclusivity
+    if "positive" in clean and "negative" not in clean and "neutral" not in clean:
+        return "positive"
+    if "negative" in clean and "positive" not in clean and "neutral" not in clean:
+        return "negative"
+    if "neutral" in clean and "positive" not in clean and "negative" not in clean:
+        return "neutral"
+    return "neutral"
+
+
+def generate_zero_shot_sentiment(
+    client,
+    text: str,
+    models: List[str],
+) -> Tuple[str, str, str]:
+    """Call Gemini with retries across candidate models and rate limit backoff.
+
+    Returns (parsed_sentiment, raw_output_text, model_name).
+    """
+    prompt = (
+        "Classify the sentiment of the following customer review into exactly one of three categories: "
+        "'negative', 'neutral', or 'positive'.\n\n"
+        f"Review: <review>{text}</review>\n\n"
+        "Respond with ONLY the lowercase category word:"
+    )
+
+    last_err = None
+    for model in models:
+        for attempt in range(5):
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt)
+                raw_text = resp.text.strip() if resp.text else ""
+                parsed = parse_sentiment_label(raw_text)
+                return parsed, raw_text, model
+            except Exception as e:
+                err_str = str(e)
+                last_err = e
+                # Check for rate limit or quota
+                if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                    # If daily quota limit exceeded, break attempt loop to switch model
+                    if "Daily" in err_str or "per-day" in err_str.lower() or "limit: 20" in err_str:
+                        logger.warning(
+                            f"Model {model} hit daily quota limit. Switching to next candidate model..."
+                        )
+                        break
+                    sleep_time = 2 ** (attempt + 1) + 2
+                    logger.info(
+                        f"[{model}] 429 rate limit hit. Sleeping {sleep_time}s (attempt {attempt + 1}/5)..."
+                    )
+                    time.sleep(sleep_time)
+                elif "503" in err_str or "UNAVAILABLE" in err_str:
+                    sleep_time = 2 ** attempt + 2
+                    logger.info(f"[{model}] 503 unavailable. Sleeping {sleep_time}s...")
+                    time.sleep(sleep_time)
+                elif "404" in err_str or "NOT_FOUND" in err_str:
+                    break
+                else:
+                    logger.warning(f"[{model}] API error: {type(e).__name__}: {err_str[:120]}")
+                    time.sleep(1.5)
+
+    raise RuntimeError(
+        f"Failed to classify review sentiment across candidate models: {last_err}"
+    )
+
+
 def evaluate_llm_zero_shot_and_guardrails(
     clf: SentimentClassifier,
     df_test: pd.DataFrame,
@@ -178,9 +258,9 @@ def evaluate_llm_zero_shot_and_guardrails(
     api_key = get_gemini_api_key()
     client = genai.Client(api_key=api_key)
 
-    # Find working model
+    models_to_try = [m for m in CANDIDATE_MODELS if m]
     active_model = None
-    for m in [m for m in CANDIDATE_MODELS if m]:
+    for m in models_to_try:
         try:
             r = client.models.generate_content(model=m, contents="ping")
             active_model = m
@@ -201,6 +281,7 @@ def evaluate_llm_zero_shot_and_guardrails(
     # 1. Zero-shot sentiment comparison on 50 seeded reviews
     sample_df = df_test.sample(n=sample_size, random_state=42).copy()
     gemini_preds = []
+    raw_sample_examples = []
     baseline_preds = clf.predict(sample_df["text"].tolist())
     y_true = sample_df["sentiment"].tolist()
 
@@ -213,36 +294,41 @@ def evaluate_llm_zero_shot_and_guardrails(
         except Exception:
             cache = {}
 
-    for text in sample_df["text"]:
-        if text in cache:
-            pred = cache[text]
-        else:
-            prompt = (
-                "Classify the sentiment of the following customer review into exactly one of three categories: "
-                "'negative', 'neutral', or 'positive'.\n\n"
-                f"Review: <review>{text}</review>\n\n"
-                "Respond with ONLY the lowercase category word:"
-            )
-            try:
-                resp = client.models.generate_content(
-                    model=active_model, contents=prompt
-                )
-                pred_raw = resp.text.strip().lower() if resp.text else "neutral"
-                if "positive" in pred_raw:
-                    pred = "positive"
-                elif "negative" in pred_raw:
-                    pred = "negative"
-                else:
-                    pred = "neutral"
-                cache[text] = pred
-                time.sleep(0.3)
-            except Exception as e:
-                logger.warning(f"Gemini zero-shot error: {e}")
-                pred = "neutral"
-        gemini_preds.append(pred)
+    candidate_list = [active_model] + [m for m in models_to_try if m != active_model]
 
-    with open(cache_file, "w", encoding="utf-8") as f:
-        json.dump(cache, f, indent=2)
+    for i, text in enumerate(sample_df["text"]):
+        if text in cache:
+            entry = cache[text]
+            if isinstance(entry, dict):
+                pred = entry.get("parsed", "neutral")
+                raw_text = entry.get("raw", pred)
+            else:
+                pred = entry
+                raw_text = entry
+        else:
+            try:
+                pred, raw_text, active_model = generate_zero_shot_sentiment(
+                    client, text, candidate_list
+                )
+                cache[text] = {"parsed": pred, "raw": raw_text}
+                with open(cache_file, "w", encoding="utf-8") as f:
+                    json.dump(cache, f, indent=2)
+                time.sleep(1.2)
+            except Exception as e:
+                logger.error(f"Failed to classify review at index {i}: {e}")
+                raise
+
+        gemini_preds.append(pred)
+        if len(raw_sample_examples) < 10:
+            raw_sample_examples.append(
+                {
+                    "index": i + 1,
+                    "raw_output": raw_text,
+                    "parsed_sentiment": pred,
+                    "true_sentiment": y_true[i],
+                    "match": bool(pred == y_true[i]),
+                }
+            )
 
     labels = ["negative", "neutral", "positive"]
     baseline_acc = float(accuracy_score(y_true, baseline_preds))
@@ -320,6 +406,7 @@ def evaluate_llm_zero_shot_and_guardrails(
             "baseline_macro_f1": round(baseline_f1, 4),
             "gemini_accuracy": round(gemini_acc, 4),
             "gemini_macro_f1": round(gemini_f1, 4),
+            "raw_sample_examples": raw_sample_examples,
         },
         "guardrail_evaluation": {
             "total_synthetic_reviews_evaluated": len(df_synth),
@@ -474,6 +561,16 @@ def write_eval_markdown(
             f.write(f"- **Gemini Accuracy**: **{zs['gemini_accuracy'] * 100:.2f}%** (vs Baseline: {zs['baseline_accuracy'] * 100:.2f}%)\n")
             f.write(f"- **Gemini Macro-F1**: **{zs['gemini_macro_f1']:.4f}** (vs Baseline: {zs['baseline_macro_f1']:.4f})\n\n")
 
+            if "raw_sample_examples" in zs and zs["raw_sample_examples"]:
+                f.write("### Raw Model Outputs vs Parsed Labels (10 Diagnostic Samples)\n\n")
+                f.write("| Sample | Raw Gemini Output | Parsed Category | Ground Truth | Match |\n")
+                f.write("|---|---|---|---|---|\n")
+                for ex in zs["raw_sample_examples"]:
+                    raw_val = repr(ex["raw_output"])
+                    match_val = "Yes" if ex["match"] else "No"
+                    f.write(f"| #{ex['index']:02d} | `{raw_val}` | `{ex['parsed_sentiment']}` | `{ex['true_sentiment']}` | {match_val} |\n")
+                f.write("\n")
+
             f.write("### Guardrails & Prompt Injection Security\n\n")
             f.write(
                 "- **Validator Pass Rate**: "
@@ -524,8 +621,13 @@ def main():
     if llm_results.get("status") == "COMPLETED":
         zs = llm_results["zero_shot_comparison"]
         gr = llm_results["guardrail_evaluation"]
-        print(f"[LLM Zero-Shot] {llm_results['model_used']} Acc: {zs['gemini_accuracy'] * 100:.2f}% vs Baseline: {zs['baseline_accuracy'] * 100:.2f}%")
+        print(f"[LLM Zero-Shot] {llm_results['model_used']} Acc: {zs['gemini_accuracy'] * 100:.2f}% vs Baseline: {zs['baseline_accuracy'] * 100:.2f}% (Macro-F1: {zs['gemini_macro_f1']:.4f})")
         print(f"[Guardrails] Validator Pass Rate: {gr['validator_pass_rate'] * 100:.2f}% | Injection Resistance: {gr['injection_resistance_rate'] * 100:.2f}%")
+        if "raw_sample_examples" in zs and zs["raw_sample_examples"]:
+            print("\n--- 10 Raw Gemini Zero-Shot Outputs vs Parsed Labels ---")
+            for ex in zs["raw_sample_examples"]:
+                print(f"Sample #{ex['index']:02d} | Raw Gemini: {repr(ex['raw_output']):15s} | Parsed: {ex['parsed_sentiment']:10s} | True: {ex['true_sentiment']:10s} | Match: {ex['match']}")
+            print("--------------------------------------------------------\n")
     else:
         print(f"[LLM Zero-Shot] Skipped: {llm_results.get('reason')}")
 

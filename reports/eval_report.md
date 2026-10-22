@@ -1,7 +1,7 @@
 # RevioIQ Evaluation Report
 
 Evaluation results for the RevioIQ Review Intelligence Engine PoC.
-*Generated at: 2026-10-21 13:18:45 UTC*
+*Generated at: 2026-10-22 05:10:28 UTC*
 
 ## 1. Executive Summary & Headline Metrics
 
@@ -12,8 +12,8 @@ Evaluation results for the RevioIQ Review Intelligence Engine PoC.
 | **Crisis Detector** | Recall (Priority) | **100.00%** | Synthetic benchmark (40 realistic reviews) |
 | **Crisis Detector** | Precision | **93.75%** | Synthetic benchmark (40 realistic reviews) |
 | **Crisis Detector** | F1 Score | **0.9677** | Synthetic benchmark (40 realistic reviews) |
-| **Gemini Zero-Shot** | Accuracy | **30.00%** | Sample n=50 (gemini-3.8-flash) vs baseline 80.00% |
-| **Gemini Zero-Shot** | Macro-F1 | **0.2735** | Sample n=50 (gemini-3.8-flash) vs baseline 0.7483 |
+| **Gemini Zero-Shot** | Accuracy | **90.00%** | Sample n=50 (gemini-3.5-flash-lite) vs baseline 80.00% |
+| **Gemini Zero-Shot** | Macro-F1 | **0.8409** | Sample n=50 (gemini-3.5-flash-lite) vs baseline 0.7483 |
 | **Reply Guardrails** | Validator Pass Rate | **100.00%** | 40 synthetic drafts checked by pure-Python validator |
 | **Security Defense** | Injection Resistance | **100.00%** | 4/4 injection attacks neutralized |
 
@@ -123,10 +123,25 @@ Evaluated on the synthetic multi-branch benchmark dataset (40 realistic reviews 
 
 ## 4. LLM Zero-Shot & Guardrail Security Assessment
 
-- **Model**: `gemini-3.8-flash`
+- **Model**: `gemini-3.5-flash-lite`
 - **Zero-Shot Sample Size**: 50 reviews randomly selected from test split
-- **Gemini Accuracy**: **30.00%** (vs Baseline: 80.00%)
-- **Gemini Macro-F1**: **0.2735** (vs Baseline: 0.7483)
+- **Gemini Accuracy**: **90.00%** (vs Baseline: 80.00%)
+- **Gemini Macro-F1**: **0.8409** (vs Baseline: 0.7483)
+
+### Raw Model Outputs vs Parsed Labels (10 Diagnostic Samples)
+
+| Sample | Raw Gemini Output | Parsed Category | Ground Truth | Match |
+|---|---|---|---|---|
+| #01 | `'positive'` | `positive` | `positive` | Yes |
+| #02 | `'negative'` | `negative` | `negative` | Yes |
+| #03 | `'negative'` | `negative` | `negative` | Yes |
+| #04 | `'negative'` | `negative` | `negative` | Yes |
+| #05 | `'positive'` | `positive` | `neutral` | No |
+| #06 | `'negative'` | `negative` | `negative` | Yes |
+| #07 | `'negative'` | `negative` | `negative` | Yes |
+| #08 | `'negative'` | `negative` | `negative` | Yes |
+| #09 | `'negative'` | `negative` | `negative` | Yes |
+| #10 | `'positive'` | `positive` | `positive` | Yes |
 
 ### Guardrails & Prompt Injection Security
 

@@ -25,8 +25,8 @@ REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 load_dotenv(BASE_DIR / ".env")
 
 # Model configuration
-DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-FALLBACK_GEMINI_MODEL = "gemini-2.5-flash-lite"
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+FALLBACK_GEMINI_MODEL = "gemini-3.5-flash"
 
 # Synthetic dataset path
 SYNTHETIC_DATA_PATH = DATA_DIR / "synthetic_reviews.csv"
